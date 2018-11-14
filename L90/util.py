@@ -2,6 +2,7 @@ import numpy as np
 import os
 from collections import Counter
 import math
+import scipy
 
 def process_file(filepath):
     """Given a file, returns a list of tokens for that file"""
@@ -110,6 +111,11 @@ def sign_test(y1_pred, y2_pred, y_test):
             minus += 1
         else:
             null += 1
+          
+    # If we have too many datapoints, than our custom method overflows
+    # Therefore, in that case we use scipy function
+    if len(y_test) > 500:
+        return scipy.stats.binom_test(plus + null // 2, len(y_test))
     
     p = 0
     N = 2 * math.ceil(null / 2) + plus + minus
@@ -134,6 +140,7 @@ def cross_validation(model, X, y, k=10, unigram=True, bigram=False, unigram_cuto
     accuracies = []
     num_of_feat = []
     total_y_pred = []
+    total_y_test = []
     
     for test_fold in range(k):
         print("Running iteration {} out of {} of cross validation".format(test_fold + 1, k))
@@ -152,6 +159,7 @@ def cross_validation(model, X, y, k=10, unigram=True, bigram=False, unigram_cuto
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         total_y_pred = np.concatenate([total_y_pred, y_pred])
+        total_y_test = np.concatenate([total_y_test, y_test])
         n_correct = sum(1 for i, _ in enumerate(y_pred) if y_pred[i] == y_test[i])
         accuracy = n_correct * 100 / len(X_test)
         accuracies.append(accuracy)
@@ -163,4 +171,4 @@ def cross_validation(model, X, y, k=10, unigram=True, bigram=False, unigram_cuto
     print("Average number of features: {}".format(np.mean(num_of_feat)))
     print("Accuracy is {}(+- {})\n".format(np.mean(accuracies), np.std(accuracies)))
     
-    return total_y_pred
+    return total_y_pred, total_y_test
