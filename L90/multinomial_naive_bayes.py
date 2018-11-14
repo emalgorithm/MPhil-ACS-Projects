@@ -32,7 +32,6 @@ class MultinomialNaiveBayes():
     
     def compute_scores(self, X, c):
         # If smoothing is not applied, some conditional probability will be zero and so we can't take the log of them
-        # To solve the problem, we change 0 to a very small number (10 ** -100)
         if self.smoothing_value == 0:
             scores = []
             log_cond_prob = np.log(self.class_to_feature_to_cond_prob[c])
